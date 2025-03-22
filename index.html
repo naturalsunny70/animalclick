@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>동물 친구 클릭 게임</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background: #fefae0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+    #character {
+      font-size: 5rem;
+      margin: 1rem;
+    }
+    #startButton, #clickButton {
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 9999px;
+      cursor: pointer;
+      margin-top: 1rem;
+      background-color: #38bdf8;
+      color: white;
+    }
+    #clickButton {
+      display: none;
+    }
+    #scoreBoard, #highScore, #timeLeft {
+      font-size: 1.2rem;
+      margin-top: 0.2rem;
+    }
+    #message {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>🐾 동물 친구 클릭 게임</h1>
+  <div id="character">🐶</div>
+  <div id="characterName">강아지</div>
+  <div id="scoreBoard">점수: <span id="score">0</span></div>
+  <div id="highScore">👑 최고 점수: <span id="best">0</span></div>
+  <div id="timeLeft">남은 시간: <span id="time">15</span>초</div>
+  <div id="message">아래 버튼을 눌러 시작하세요!</div>
+  <button id="startButton">게임 시작</button>
+  <button id="clickButton">터치 / 클릭!</button>
+
+  <audio id="bgm" loop>
+    <source src="title.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="clickSound">
+    <source src="https://cdn.pixabay.com/audio/2023/03/31/audio_a7dc53b77c.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    const startButton = document.getElementById("startButton");
+    const clickButton = document.getElementById("clickButton");
+    const character = document.getElementById("character");
+    const characterName = document.getElementById("characterName");
+    const scoreSpan = document.getElementById("score");
+    const message = document.getElementById("message");
+    const bgm = document.getElementById("bgm");
+    const clickSound = document.getElementById("clickSound");
+    const bestSpan = document.getElementById("best");
+    const timeSpan = document.getElementById("time");
+
+    const animals = [
+      { emoji: "🐶", name: "강아지" }, { emoji: "🐱", name: "고양이" },
+      { emoji: "🐰", name: "토끼" }, { emoji: "🦊", name: "여우" },
+      { emoji: "🐻", name: "곰" }, { emoji: "🐼", name: "판다" },
+      { emoji: "🐨", name: "코알라" }, { emoji: "🐯", name: "호랑이" },
+      { emoji: "🦁", name: "사자" }, { emoji: "🐷", name: "돼지" }
+    ];
+
+    let score = 0;
+    let bestScore = localStorage.getItem('animalGameHighScore') || 0;
+    let timer;
+    let countdown;
+
+    bestSpan.textContent = bestScore;
+
+    function getRandomAnimal() {
+      return animals[Math.floor(Math.random() * animals.length)];
+    }
+
+    function changeAnimal() {
+      const animal = getRandomAnimal();
+      character.textContent = animal.emoji;
+      characterName.textContent = animal.name;
+      document.body.style.backgroundColor = `hsl(${Math.floor(Math.random()*360)}, 80%, 90%)`;
+    }
+
+    function endGame() {
+      clearTimeout(timer);
+      clearInterval(countdown);
+      clickButton.disabled = true;
+      clickButton.style.display = "none";
+      startButton.style.display = "inline-block";
+      message.textContent = `🛑 게임 오버! 최종 점수: ${score}점`;
+      if (score > bestScore) {
+        bestScore = score;
+        localStorage.setItem('animalGameHighScore', bestScore);
+        bestSpan.textContent = bestScore;
+        alert("🎉 최고 기록 갱신!");
+      } else {
+        bestSpan.textContent = bestScore;
+      }
+      bgm.pause();
+    }
+
+    startButton.addEventListener("click", () => {
+      score = 0;
+      scoreSpan.textContent = score;
+      bestSpan.textContent = bestScore;
+      changeAnimal();
+      clickButton.disabled = false;
+      clickButton.style.display = "inline-block";
+      startButton.style.display = "none";
+      message.textContent = "터치 / 클릭해서 동물 친구를 바꿔보세요!";
+      bgm.volume = 0.5;
+      bgm.play().catch(() => alert("음악 재생을 허용하려면 화면을 한 번 더 눌러주세요."));
+
+      let timeLeft = 15;
+      timeSpan.textContent = timeLeft;
+      countdown = setInterval(() => {
+        timeLeft--;
+        timeSpan.textContent = timeLeft;
+        if (timeLeft <= 0) clearInterval(countdown);
+      }, 1000);
+
+      timer = setTimeout(endGame, 15000);
+    });
+
+    clickButton.addEventListener("click", () => {
+      score++;
+      scoreSpan.textContent = score;
+      clickSound.volume = 1.0;
+      clickSound.currentTime = 0;
+      clickSound.play().catch(e => {
+        console.warn("❌ 효과음 재생 실패:", e);
+        alert("🔇 효과음을 재생하려면 기기 음소거를 해제하고, 한 번 더 클릭해보세요!");
+      });
+      changeAnimal();
+    });
+  </script>
+</body>
+</html>
